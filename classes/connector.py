@@ -1,4 +1,6 @@
-import os, json, time
+import datetime
+import os, json, time, datetime
+__all__ = ["Connector"]
 
 
 class Connector:
@@ -47,13 +49,15 @@ class Connector:
         # проверка на существование файла
         if not os.path.exists(self.__data_file):
             file = open(self.__data_file, "w")
-            raise FileNotFoundError(f"Файл по текущей директории не найден. ВНИМАНИЕ: ФАЙЛ БЫЛ СОЗДАН АВТОМАТИЧЕСКИ ")
 
         # проверка на актуальность файла:
         current_time = time.time()  # текущее время
         file_creation_time = os.path.getmtime(self.__data_file)  # время создания файла
         if not current_time - file_creation_time < 84_400:  # проверяем разницу во времени (не более 24 часов)
-            raise Exception(f"Файл слишком старый. Обновите данные")
+            current_date = datetime.date.today()
+            current_date = current_date.strftime("%B %d, %Y")
+            self.__data_file = f"{self.__data_file}_{current_date}"
+            print(f"Файл слишком старый. Была создана новая база данных с именем {self.__data_file}")
 
     def insert(self, data):
         """
@@ -108,16 +112,10 @@ class Connector:
             with open(self.__data_file, "w", encoding="UTF-8") as file:
                 json.dump(return_list, file)
 
+    def clear(self):
+        """
+        Метод очистки файла с базой данных
+        """
+        with open(self.__data_file, "w", encoding="UTF-8") as file:
+            file.close()
 
-if __name__ == '__main__':
-    df = Connector('df.json')
-
-    data_for_file = [{"id": 1}, {"id": 2}]
-
-    # df.insert(data_for_file)
-    # print(df.select({"id": 1}))
-    # print(df.select({"id": 1}))
-    # df.delete({'id': 2})
-    # print(z)
-    data_from_file = df.select(dict())
-    # assert data_from_file == []

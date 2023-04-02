@@ -1,1 +1,3 @@
-from classes import connector, engine_classes, jobs_classes
+from .connector import *
+from .engine_classes import *
+from .jobs_classes import *
