@@ -1,4 +1,5 @@
 import json, datetime
+from typing import Optional, Any, Union, Dict, Tuple
 
 __all__ = ["Vacancy", "HHVacancy", "SJVacancy"]
 
@@ -11,7 +12,7 @@ class Vacancy:
 
     __slots__ = ("name", "url", "description", "salary", "counter", "experience", "date_published")
     # список вакансий
-    _vacancy_list = list()
+    _vacancy_list: list = list()
 
     def __gt__(self, other):
         """Сравнение объетов класса на >"""
@@ -66,13 +67,16 @@ class HHVacancy(Vacancy):  # add counter mixin
     """ HeadHunter Vacancy """
 
     def __init__(self, data: dict):
+        assert data is not None
         self.platform = "HeadHunter"
         self.name = data.get("name")
         self.url = data.get("url")
         self.salary = self.get_salary(data)
         self._salary_to_filter = self.get_salary_to_filter(data)
         self.experience = self.get_experience_to_filter(data)
-        self.date_published = datetime.datetime.strptime(data.get("date_published"), "%Y-%m-%dT%H:%M:%S%z").date()
+        current_data: Optional[Any] = data.get("date_published")
+        assert current_data is not None
+        self.date_published: Optional[Any] = datetime.datetime.strptime(current_data, "%Y-%m-%dT%H:%M:%S%z").date()
         self.has_test = data.get("has_test")
         self.accept_temporary = data.get("accept_temporary")
         super()._vacancy_list.append(self)
@@ -106,9 +110,14 @@ class HHVacancy(Vacancy):  # add counter mixin
         return 0
 
     def get_experience_to_filter(self, data: dict):
+        assert data is not None
+        current_experience: Optional[Any] = data.get("experience")
+        assert current_experience is not None
         _experience = 0
-        if data.get("experience") is not None:
-            match data.get("experience").get("id"):
+        if current_experience is not None:
+            current_experience_id: Optional[Any] = current_experience.get("id")
+            assert current_experience_id is not None
+            match current_experience_id:
                 case "noExperience":
                     _experience = 0
                 case "between1And3":
@@ -124,16 +133,20 @@ class SJVacancy(Vacancy):  # add counter mixin
     """ SuperJob Vacancy """
 
     def __init__(self, data: dict):
-
+        assert data is not None
         self.platform = "SuperJob"
         self.name = data.get("name")
         self.url = data.get("url")
         self.salary = self.get_salary(data)
         self._salary_to_filter = 0 if (self.salary is None or isinstance(self.salary, str)) else self.salary
         self.experience = self.get_experience_to_filter(data)
-        self.date_published = datetime.datetime.fromtimestamp(data.get("date_published")).date()
+        current_data: Optional[Any] = data.get("date_published")
+        assert current_data is not None
+        self.date_published = datetime.datetime.fromtimestamp(current_data).date()
         self.has_test = True if data.get("has_test") else False
-        self.accept_temporary = self.get_accept_temporary(data.get("accept_temporary"))
+        current_acception: Optional[Any] = data.get("accept_temporary")
+        assert current_acception is not None
+        self.accept_temporary: Dict[Any, Any] = self.get_accept_temporary(current_acception)
         super()._vacancy_list.append(self)
 
     def get_salary(self, current_data: dict):

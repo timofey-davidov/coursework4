@@ -6,6 +6,7 @@
 import classes
 from classes import Connector
 import time, json, datetime
+from typing import Union
 from operator import attrgetter
 def create_database(keyword: str):
     # функция формирования базы данных
@@ -33,16 +34,16 @@ def create_database(keyword: str):
         print("База данных успешно сформирована!")
         for i in data:
             if i["platform"] == "HeadHunter":
-                item = classes.HHVacancy(i)
+                item: Union[classes.SJVacancy, classes.HHVacancy] = classes.HHVacancy(i)
             elif i["platform"] == "SuperJob":
                 item = classes.SJVacancy(i)
         return True
 
 def params():
     """Функция для формирования параметров фильтрации вакансий"""
+    param: set = set()
     try:
-        param = set(map(int, input(
-            "Введите через пробел номера параметров для фильтрации вакансий:\n1 - Высокая зарплата\n2 - Наличие тестового задания\n3 - Временная\частичная занятость\n4 - Дата добавления вакансии\n").split()))
+        param = set(map(int, input("Введите через пробел номера параметров для фильтрации вакансий:\n1 - Высокая зарплата\n2 - Наличие тестового задания\n3 - Временная\частичная занятость\n4 - Дата добавления вакансии\n").split()))
     except ValueError:
         print("Пожалуйста, проверьте ввод! должны быть числа через пробел!")
         time.sleep(1)

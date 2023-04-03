@@ -13,7 +13,7 @@ class Connector:
     Класс, описывающий подключение к файлам и работу с ними.
     """
 
-    def __init__(self, path_to_file: str = None):
+    def __init__(self, path_to_file: str):
         """
         Метод, инициализации работы с файлом
         """
@@ -49,15 +49,16 @@ class Connector:
         # проверка на существование файла
         if not os.path.exists(self.__data_file):
             file = open(self.__data_file, "w")
+            file.close()
 
         # проверка на актуальность файла:
         current_time = time.time()  # текущее время
         file_creation_time = os.path.getmtime(self.__data_file)  # время создания файла
         if not current_time - file_creation_time < 84_400:  # проверяем разницу во времени (не более 24 часов)
             current_date = datetime.date.today()
-            current_date = current_date.strftime("%B %d, %Y")
+            current_date = current_date.strftime("%d_%m_%Y")
             self.__data_file = f"{self.__data_file}_{current_date}"
-            print(f"Файл слишком старый. Была создана новая база данных с именем {self.__data_file}")
+            print(f"Файл слишком старый. Была создана новая база данных с именем {self.__data_file}_{self.__data_file}")
 
     def insert(self, data):
         """
@@ -70,8 +71,10 @@ class Connector:
             else:
                 base = json.loads(f)
             base.extend(data)
+            file.close()
         with open(self.__data_file, "w", encoding="UTF-8") as file:
             json.dump(base, file, ensure_ascii=False)
+            file.close()
 
     def select(self, query: dict):
         """
@@ -90,7 +93,8 @@ class Connector:
                         return_list.append(i)
             if len(return_list) == 0:
                 print("Данные по текущему фильтру не найдены")
-            return return_list
+            file.close()
+        return return_list
 
     def delete(self, query: dict):
         """
@@ -108,9 +112,12 @@ class Connector:
                             continue
                         else:
                             return_list.append(i)
+            file.close()
         if query:
             with open(self.__data_file, "w", encoding="UTF-8") as file:
                 json.dump(return_list, file)
+                file.close()
+
 
     def clear(self):
         """
