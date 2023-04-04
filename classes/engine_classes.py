@@ -35,7 +35,7 @@ class HH(Engine):
         # ссылка на API для поиска
         self.__URL = "https://api.hh.ru/vacancies/"
         # список из найденных вакансий
-        self._vacancies_list = list()
+        self._vacancies_list: list = list()
         # адрес БД
         self.connect_address = connect_address
         # объект-коннектор для работы с БД
@@ -59,12 +59,16 @@ class HH(Engine):
             if len(self._items_list) <= 1000:
                 # получаем ответ от API
                 response = requests.get(self.__URL, params=self.params_per_page(page))
-                # переводим формат JSON в словарь DICT сохраняем список из id вакансий (чтобы не перегружать базу данных, а также потому, что вытягиваются не все данные конкретной вакансии)
-                response_dict = response.json()
-                for i in response_dict["items"]:
-                    self._items_list.append(i)
-                # делаем задержку между запросами на страницы, чтобы HeadHunter не подумал, что мы их пытаемся нагрузить
-                time.sleep(0.25)
+                if str(response.status_code).startswith("4") or str(response.status_code).startswith("5"):
+                    print("ВНИМАНИЕ! Возникла ошибка подключения! Обработаны не все данные!")
+                    continue
+                else:
+                    # переводим формат JSON
+                    response_dict = response.json()
+                    for i in response_dict["items"]:
+                        self._items_list.append(i)
+                    # делаем задержку между запросами на страницы, чтобы HeadHunter не подумал, что мы их пытаемся нагрузить
+                    time.sleep(0.25)
             else:
                 break
         print("...Вакансии с HH получены...")
@@ -105,7 +109,7 @@ class SJ(Engine):
     def __init__(self, search_word: str, connect_address: str = "JSON_database/database.json"):
         self.search_word = search_word
         self.URL = 'https://api.superjob.ru/2.0/vacancies/'
-        self._vacancies_list = list()
+        self._vacancies_list: list = list()
         self.connect_address = connect_address
         self.connect = self.get_connector(self.connect_address)
 
@@ -131,11 +135,16 @@ class SJ(Engine):
         # обнуляем список с вакансиями, если ранее уже был выполнен поиск
         self._items_list = list()
         for page in range(0, 5):
-            current_objects = requests.get(self.URL, headers=self.headers, params=self.params_per_page(page)).json()
-            for i in current_objects["objects"]:
-                if i.get("currency") == "rub":
-                    self._items_list.append(i)
-                    time.sleep(0.005)
+            current_objects = requests.get(self.URL, headers=self.headers, params=self.params_per_page(page))
+            if str(current_objects.status_code).startswith("4") or str(current_objects.status_code).startswith("5"):
+                print("ВНИМАНИЕ! Возникла ошибка подключения! Обработаны не все данные!")
+                continue
+            else:
+                current_objects = current_objects.json()
+                for i in current_objects["objects"]:
+                    if i.get("currency") == "rub":
+                        self._items_list.append(i)
+                        time.sleep(0.005)
         print("...Вакансии с SJ получены...")
         return self._items_list
 
